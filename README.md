@@ -72,5 +72,6 @@ Stop the application by pressing **Ctrl+C**.
 - Another issue is the FFT, not good enough. Sometimes the first harmonic is stronger than the fundamental frequency - I have implemented some code to deal with this, but needs improvement. But there is a biggest issue with FFT: sometimes there is some error in the spectrum and the corresponding note is wrong (e.g. I play the note B, but the detected frequency is closed to the frequency for C).
 - It is difficult to detect when a new sound starts (attack). I assume that if the detected note is the previous one, and the amplitude is decreasing compared to the previos scan, the same note is still playing. But the alorithm sometimes fail, and in addition, if a note is repeted with a lower volume, it will not be detected.
 
-# Ideas for improvement
+## Ideas for improvement
 - This application could be programmed into an Arduino or similar hardware, making a standalone device that could be connected to an electric guitar (input) and to a MIDI device (output). Of course the MIDI device could be a PC with VST/DAW.
+- It may be possible to develop a detection algorithm that only checks the 88 frequencies corresponding with the piano keys, staring at the lowest frequency - hence checking in average 44 frequencies only. The numpy FFT uses even-spaced frequencies, having bigger errors at low frequency notes - this is very noticeable when running the application.
