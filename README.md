@@ -46,7 +46,7 @@ As shown in the prompt, we have activated the *audio2midi* environment. Now we n
 
 (audio2midi) *<root_path>\\audio2midi*> **python -m pip install sounddevice**
 
-(audio2midi) *<root_path>\\audio2midi*> **python -m pip install mido**
+(audio2midi) *<root_path>\\audio2midi*> **python -m pip install mido[ports-rtmidi]**
 
 Finally, copy the **audio2midi.py** file to the environment folder (<root_path>\\audio2midi).
 
@@ -57,4 +57,20 @@ Then go back to the command window and run the application with:
 
 (audio2midi) *<root_path>\\audio2midi*> **python -m audio2midi**
 
+The application will show a list of available audio inputs, enter the number for the lowest channel for your DAC (e.g. in may case I have "1 - USB Audio Codec", so I will enter "1").
+
+Then the application will show a list of available MIDI outputs, enter the number for loopMIDI (or, if you prefer to avoid the VST/DAW and use the default wavetable in Windows, enter the number for Microsoft GS Wavetable Synth).
+
+Now if you connect and play and instrument to your audio capture device, you should listen a sound coming from your VST, DAW or Windows wavetable.
+
+Stop the application by pressing **Ctrl+C**.
+
 # Current issues and improvement ideas
+## Issues
+- The biggest issue is the latency. There is a noticeable input between the audio input and the MIDI sound. While we need some time to have enough audio to determine the frequency spectrum, this should be unnoticeable (less than 25ms). Since I am using a zero latency device, the problem may come from my PC, or some MIDI latency, I am not sure.
+- Due to the accumulation of latency and other delays, it is not possible to play a fast sequence of notes.
+- Another issue is the FFT, not good enough. Sometimes the first harmonic is stronger than the fundamental frequency - I have implemented some code to deal with this, but needs improvement. But there is a biggest issue with FFT: sometimes there is some error in the spectrum and the corresponding note is wrong (e.g. I play the note B, but the detected frequency is closed to the frequency for C).
+- It is difficult to detect when a new sound starts (attack). I assume that if the detected note is the previous one, and the amplitude is decreasing compared to the previos scan, the same note is still playing. But the alorithm sometimes fail, and in addition, if a note is repeted with a lower volume, it will not be detected.
+
+# Ideas for improvement
+- This application could be programmed into an Arduino or similar hardware, making a standalone device that could be connected to an electric guitar (input) and to a MIDI device (output). Of course the MIDI device could be a PC with VST/DAW.
