@@ -5,9 +5,9 @@
 # y posiblemente hay que instalar rtmidi también
 
 # Para usar, abrir ventana CMD e ingresar:
-# cd C:\Users\Usuario\OneDrive\Documentos\audio-env
+# cd C:\<path>\audio2midi
 # scripts\activate
-# py -m fundamentales
+# py -m audio2midi
 
 # Importar módulos
 import numpy as np               # funciones numéricas
@@ -39,7 +39,7 @@ sd.default.channels = 1, None
 sd.default.blocksize = block_size
 sd.default.latency ='low', 'low'
 # - Backend para MIDO
-# mido.set_backend('mido.backends.portmidi')
+# mido.set_backend('mido.backends.rtmidi')
 # - Valores para registrar última nota detectada y pico
 prev_midi = -1
 prev_pk = -1
@@ -88,18 +88,18 @@ def seleccionar_salida():
 def calcular_fundamental(audio_chunk, fft_freqs):
   # Transformada de Fourier
   spectrum = abs(fourier.fft(audio_chunk)) #.astype('int16') # los valores son altos, más rápido con enteros?
-  # NO HACE FALTA ACA, es param fft_freqs = fourier.fftfreq(len(spectrum), d=1/sample_freq)
-  # PODRIA PROBAR SIN TOMAR MITAD SINO TODO, POR LAS DUDAS QUE PIERDA PRECISION Y SE EQUIVOQUE POR ESO
+  # ----- ToDo: PODRIA PROBAR SIN TOMAR MITAD SINO TODO, tal vez detecte frecuencia con más precisión
   spectrum = spectrum[0:block_size//2]  # tomar la primera mitad (es simétrica)
   max_index = np.argmax(spectrum[1:]) + 1 # Encontrar el pico más alto (excluyendo la componente DC)
+  # -----
+  # ----- ToDo: MEJORAR DETECCION DE POSIBLE PICO ANTERIOR - a veces el primer armónico da un pico más alto, porque FFT no es exacto:
   pk = spectrum[max_index]
-  # EXPERIMENTAL (porque a veces el primer armónico da un pico más alto, porque no son exactos):
   max_index2 = max_index - 2
   if max_index2>1:
     max_index2 = np.argmax(spectrum[1:max_index2]) + 1 # Encontrar el pico más alto anterior
     if 2*spectrum[max_index2]>pk:
       max_index = max_index2
-  # fin experimental
+  # -----
   fundamental_freq = fft_freqs[max_index]
   peak = spectrum[max_index]/block_size
   if debug and peak>40:
@@ -128,7 +128,7 @@ def encontrar_nota(f):
           else:
             found = i
       break
-  if found>87: found = 87  # revisar, no debería ser mayor a menos que haya puesto uno de más en note_freq_list
+  if found>87: found = 87  # ToDo: revisar, no debería ser mayor a menos que haya puesto uno de más en note_freq_list
   nota = note_names[found]
   octava = int((i+9)/12)-1
   return found+9, nota+str(octava) # número MIDI y string descriptivo
@@ -159,7 +159,7 @@ try:
       MIDIout.send(msg)
       prev_midi = -1
     prev_peak = peak
-    # conviene poner un sd.sleep(5)?
+    # ToDo: conviene poner un sd.sleep(5), o no es necesario?
 except KeyboardInterrupt: 
   MIDIout.close()
   sd.stop()
